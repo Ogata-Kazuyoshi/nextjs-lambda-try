@@ -1,30 +1,34 @@
-# name: Deploy to Amplify
+name: Deploy to Amplify
 
-# on:
-#     push:
-#         branches:
-#             - main # デプロイをトリガーするブランチを指定
+on:
+  push:
+    branches:
+      - main # デプロイをトリガーするブランチを指定
 
-# jobs:
-#     deploy:
-#         runs-on: ubuntu-latest
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
 
-#         steps:
-#             - name: Checkout code
-#               uses: actions/checkout@v2
+    steps:
+      - name: Git clone the repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-#             - name: Configure AWS credentials
-#               uses: aws-actions/configure-aws-credentials@v1
-#               with:
-#                   aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-#                   aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-#                   aws-region: us-west-2 # 使用するAWSリージョンを指定
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.OIDC_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
 
-#             - name: Install Amplify CLI
-#               run: npm install -g @aws-amplify/cli
+      - name: Install Amplify CLI
+        run: npm install -g @aws-amplify/cli
 
-#             - name: Initialize Amplify
-#               run: amplify init --yes
+      - name: Change directory to amplify-next-test
+        run: cd amplify-next-test
 
-#             - name: Publish to Amplify
-#               run: amplify publish --yes
+      - name: Initialize Amplify
+        run: amplify init --yes
+
+      - name: Publish to Amplify
+        run: amplify publish --yes
