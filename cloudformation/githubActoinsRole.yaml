@@ -1,0 +1,189 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Base network infrastructure for userCreator-iam-role'
+
+Parameters:
+  GithubAccount:
+    Type: String
+  GithubRepository:
+    Type: String
+  AssumeRoleName:
+    Type: String
+  LambdaRoleName:
+    Type: String
+  HostZoneIdDev:
+    Type: String
+  HostZoneIdProd:
+    Type: String
+
+Resources:
+  GithubActionsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Ref AssumeRoleName
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !Sub 'arn:aws:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com'
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                'token.actions.githubusercontent.com:sub':
+                  - !Sub 'repo:${GithubAccount}/${GithubRepository}:ref:refs/heads/dev'
+                  - !Sub 'repo:${GithubAccount}/${GithubRepository}:ref:refs/heads/prod'
+                'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSCloudFormationFullAccess
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+      Policies:
+        - PolicyName: CloudFormationCustom
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - cloudformation:CreateChangeSet
+                  - cloudformation:DescribeChangeSet
+                  - cloudformation:ExecuteChangeSet
+                  - cloudformation:DescribeStacks
+                Resource: '*'
+        - PolicyName: IAMRoleManagement
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - iam:CreateRole
+                  - iam:PutRolePolicy
+                  - iam:AttachRolePolicy
+                  - iam:DetachRolePolicy
+                  - iam:CreateServiceLinkedRole
+                Resource: '*'
+        - PolicyName: TaggingOperations
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - tag:GetResources
+                  - tag:TagResources
+                  - tag:UntagResources
+                Resource: '*'
+        - PolicyName: LambdaCreateUpdatePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:CreateFunction
+                  - lambda:UpdateFunctionCode
+                  - lambda:UpdateFunctionConfiguration
+                  - lambda:GetFunction
+                  - lambda:DeleteFunction
+                  - lambda:TagResource
+                  - lambda:UntagResource
+                  - lambda:AddPermission
+                  - lambda:RemovePermission
+                  - lambda:ListTags
+                  - lambda:InvokeFunction
+                Resource: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:*'
+              - Effect: Allow
+                Action:
+                  - iam:PassRole
+                Resource: '*'
+        - PolicyName: APIGatewayManagementPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - apigateway:GET
+                  - apigateway:POST
+                  - apigateway:PUT
+                  - apigateway:DELETE
+                  - apigateway:PATCH
+                  - apigateway:UpdateRestApiPolicy
+                  - apigateway:AddCertificateToDomain
+                  - apigateway:CreateDomainName
+                  - apigateway:GetDomainName
+                  - apigateway:TagResource
+                  - apigateway:UntagResource
+                  - apigateway:RemoveCertificateFromDomain
+                Resource:
+                  - !Sub 'arn:aws:apigateway:${AWS::Region}::/restapis'
+                  - !Sub 'arn:aws:apigateway:${AWS::Region}::/restapis/*'
+                  - !Sub 'arn:aws:apigateway:${AWS::Region}::/domainnames'
+                  - !Sub 'arn:aws:apigateway:${AWS::Region}::/domainnames/*'
+                  - !Sub 'arn:aws:apigateway:${AWS::Region}::/tags/*'
+        - PolicyName: CloudFrontInvalidationPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - cloudfront:CreateInvalidation
+                  - cloudfront:GetInvalidation
+                  - cloudfront:ListInvalidations
+                Resource: !Sub 'arn:aws:cloudfront::${AWS::AccountId}:distribution/*'
+        - PolicyName: Route53ManagementPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - route53:ChangeResourceRecordSets
+                  - route53:ListHostedZones
+                  - route53:GetChange
+                  - route53:GetHostedZone
+                Resource:
+                  - !Sub 'arn:aws:route53:::hostedzone/${HostZoneIdDev}'
+                  - !Sub 'arn:aws:route53:::hostedzone/${HostZoneIdProd}'
+                  - 'arn:aws:route53:::change/*'
+      Tags:
+        - Key: Project
+          Value: UserCreator
+
+  LambdaExecutionRoleWithCognito:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Ref LambdaRoleName
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: CognitoUserPoolAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - cognito-idp:AdminCreateUser
+                  - cognito-idp:AdminDeleteUser
+                  - cognito-idp:AdminAddUserToGroup
+                  - cognito-idp:AdminGetUser
+                  - cognito-idp:ListUsersInGroup
+                  - cognito-idp:AdminUpdateUserAttributes
+                  - cognito-idp:ListUsers
+                Resource: !Sub 'arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/*'
+      Tags:
+        - Key: Project
+          Value: UserCreator
+
+Outputs:
+  GithubActionsRoleArn:
+    Description: ARN of the IAM Role for GitHub Actions
+    Value: !GetAtt GithubActionsRole.Arn
+    Export:
+      Name: GithubActionsRoleArn
+  LambdaExecutionRoleWithCognitoArn:
+    Description: ARN of the IAM Role for lambda role
+    Value: 'LambdaExecutionRoleWithCognito'
+    Export:
+      Name: LambdaExecutionRoleWithCognito
