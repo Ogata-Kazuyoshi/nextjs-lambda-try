@@ -32,7 +32,11 @@ jobs:
         run: cd amplify-next-test
 
       - name: Initialize Amplify
-        run: amplify init --yes
+        run: |
+          amplify init --yes \
+            --amplify '{"envName":${{ vars.AMPLIFY_ENV_NAME }}}' \
+            --providers '{"awscloudformation":{"Region":"${{ vars.AWS_REGION }}"}}' \
+            --categories '{}'
 
       - name: Publish to Amplify
         run: amplify publish --yes
