@@ -3,7 +3,7 @@ name: Deploy to Amplify
 on:
   push:
     branches:
-      - main # デプロイをトリガーするブランチを指定
+      - main
 
 permissions:
   id-token: write
@@ -14,10 +14,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Git clone the repository
+      - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -28,15 +26,8 @@ jobs:
       - name: Install Amplify CLI
         run: npm install -g @aws-amplify/cli
 
-      - name: Change directory to amplify-next-test
-        run: cd amplify-next-test
-
       - name: Initialize Amplify
-        run: |
-          amplify init --yes \
-            --amplify "{\"envName\":\"${{ vars.AMPLIFY_ENV_NAME }}\"}" \
-            --providers "{\"awscloudformation\":{\"Region\":\"${{ vars.AWS_REGION }}\"}}" \
-            --categories "{}"
+        run: amplify init --yes
 
-      - name: Publish to Amplify
+      - name: Deploy to Amplify
         run: amplify publish --yes
