@@ -28,15 +28,21 @@ const ConfirmSession = () => {
       console.log('Access Token:', session)
       // @ts-ignore
       console.log('Access Token:', session?.accessToken)
-      axios.get(
-        'https://dmmr4cq2aa.execute-api.ap-northeast-1.amazonaws.com/dev/api/hello',
-        {
-          headers: {
-            // @ts-ignore
-            Authorization: `Bearer ${session?.accessToken}`,
-          },
-        }
-      )
+      axios
+        .get(
+          'https://dmmr4cq2aa.execute-api.ap-northeast-1.amazonaws.com/dev/api/hello',
+          {
+            headers: {
+              // @ts-ignore
+              Authorization: `Bearer ${session?.accessToken}`,
+            },
+          }
+        )
+        .then(async (res) => {
+          const data = await res.json() // Read the response body once
+          console.log(data)
+          return data.body
+        })
     })
   }, [])
   // useEffect(() => {

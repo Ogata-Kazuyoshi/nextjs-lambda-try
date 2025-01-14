@@ -9,9 +9,10 @@ export const config: NextAuthConfig = {
       issuer: process.env.COGNITO_ISSUER,
       authorization: {
         params: {
-          scope: 'openid profile email',
+          scope: 'openid email profile',
         },
       },
+      checks: ['nonce'],
     }),
   ],
   basePath: '/api/auth',
