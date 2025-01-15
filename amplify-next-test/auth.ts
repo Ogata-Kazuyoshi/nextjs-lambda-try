@@ -15,15 +15,23 @@ export const config: NextAuthConfig = {
       checks: ['nonce'],
     }),
   ],
+  // pages: {
+  //   signIn: '/login',
+  // },
   basePath: '/api/auth',
   callbacks: {
-    authorized({ request, auth }) {
+    authorized: async ({ request, auth }) => {
+      // return !!auth
       try {
         const { pathname } = request.nextUrl
-        if (pathname == '/protected') return !!auth
+        console.log({ auth })
+        if (pathname === '/protected') {
+          return !!auth
+        }
         return true
       } catch (error) {
         console.error(error)
+        return false
       }
     },
     jwt({ token, account }) {
