@@ -1,0 +1,97 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Cognito User Pool and Client for Arcos
+
+Parameters:
+  CognitoCustomDomainPrefix:
+    Type: String
+  UserPoolName:
+    Type: String
+  CallbackURL:
+    Type: String
+  GoogleClientId:
+    Type: String
+    Description: Google Client ID for OAuth
+  GoogleClientSecret:
+    Type: String
+    Description: Google Client Secret for OAuth
+
+Resources:
+  CognitoUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Ref UserPoolName
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: false
+      AutoVerifiedAttributes:
+        - email
+      UsernameAttributes:
+        - email
+      MfaConfiguration: 'OFF'
+      UserPoolAddOns:
+        AdvancedSecurityMode: 'OFF'
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: true
+          RequireUppercase: true
+          TemporaryPasswordValidityDays: 7
+      Schema:
+        - Name: email
+          AttributeDataType: String
+          Mutable: false
+          Required: true
+      UserAttributeUpdateSettings:
+        AttributesRequireVerificationBeforeUpdate:
+          - email
+
+  CognitoUserPoolDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      Domain: !Ref CognitoCustomDomainPrefix
+      UserPoolId: !Ref CognitoUserPool
+
+  CognitoUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: cognito-auth
+      UserPoolId: !Ref CognitoUserPool
+      GenerateSecret: true
+      ExplicitAuthFlows:
+        - ALLOW_REFRESH_TOKEN_AUTH
+      CallbackURLs:
+        - !Ref CallbackURL
+      AllowedOAuthFlows:
+        - code
+      AllowedOAuthScopes:
+        - openid
+        - email
+      SupportedIdentityProviders:
+        - COGNITO
+        - Google
+      AllowedOAuthFlowsUserPoolClient: true
+
+  CognitoUserPoolIdentityProviderGoogle:
+    Type: AWS::Cognito::UserPoolIdentityProvider
+    Properties:
+      ProviderName: Google
+      UserPoolId: !Ref CognitoUserPool
+      ProviderType: Google
+      ProviderDetails:
+        client_id: !Ref GoogleClientId
+        client_secret: !Ref GoogleClientSecret
+        authorize_scopes: 'openid email'
+      AttributeMapping:
+        email: email
+
+Outputs:
+  UserPoolId:
+    Value: !Ref CognitoUserPool
+    Description: ID of the Cognito User Pool
+  UserPoolClientId:
+    Value: !Ref CognitoUserPoolClient
+    Description: ID of the Cognito User Pool Client
+  CognitoDomain:
+    Value: !Sub https://${CognitoUserPoolDomain}.auth.${AWS::Region}.amazoncognito.com
+    Description: Cognito Domain URL
