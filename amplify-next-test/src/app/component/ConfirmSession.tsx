@@ -39,6 +39,7 @@ const ConfirmSession = () => {
           }
         )
         .then(async (res) => {
+          // @ts-ignore
           const data = await res.json() // Read the response body once
           console.log(data)
           return data.body
