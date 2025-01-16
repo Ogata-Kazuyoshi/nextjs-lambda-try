@@ -3,14 +3,22 @@ import { auth } from '../../../auth'
 
 const page = async () => {
   const session = await auth()
+
+  const headers =
+    process.env.DEVELOPEMENT_ENVIRONMENT === 'dev'
+      ? {
+          Authorization: `Bearer ${session?.accessToken}`,
+          'X-Mock-User-Sub': session?.user?.id,
+          'X-Mock-User-Groups': 'local-group',
+        }
+      : { Authorization: `Bearer ${session?.accessToken}` }
   // @ts-ignore
   const response = await fetch(
     // 'https://dmmr4cq2aa.execute-api.ap-northeast-1.amazonaws.com/dev/api/hello',
-    'https://2msdy2z1l4.execute-api.ap-northeast-1.amazonaws.com/dev/hello',
+    // 'https://2msdy2z1l4.execute-api.ap-northeast-1.amazonaws.com/dev/hello',
+    'http://127.0.0.1:3030/hello',
     {
-      headers: {
-        Authorization: `Bearer ${session?.accessToken}`,
-      },
+      headers: headers,
     }
   ).then(async (res) => {
     const data = await res.json()

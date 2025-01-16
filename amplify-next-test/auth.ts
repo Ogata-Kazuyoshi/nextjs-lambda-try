@@ -46,6 +46,7 @@ export const config: NextAuthConfig = {
       const accessToken = token.accessToken as string
       // @ts-ignore
       session.accessToken = accessToken
+      session.user.id = token.email!
       return session
     },
   },
