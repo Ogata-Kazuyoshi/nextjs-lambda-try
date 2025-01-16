@@ -5,7 +5,8 @@ const page = async () => {
   const session = await auth()
   // @ts-ignore
   const response = await fetch(
-    'https://dmmr4cq2aa.execute-api.ap-northeast-1.amazonaws.com/dev/api/hello',
+    // 'https://dmmr4cq2aa.execute-api.ap-northeast-1.amazonaws.com/dev/api/hello',
+    'https://2msdy2z1l4.execute-api.ap-northeast-1.amazonaws.com/dev/hello',
     {
       headers: {
         Authorization: `Bearer ${session?.accessToken}`,

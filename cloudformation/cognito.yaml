@@ -40,8 +40,7 @@ Resources:
       Schema:
         - Name: email
           AttributeDataType: String
-          Mutable: false
-          Required: true
+          Mutable: true
       UserAttributeUpdateSettings:
         AttributesRequireVerificationBeforeUpdate:
           - email
@@ -89,9 +88,17 @@ Outputs:
   UserPoolId:
     Value: !Ref CognitoUserPool
     Description: ID of the Cognito User Pool
+
   UserPoolClientId:
     Value: !Ref CognitoUserPoolClient
     Description: ID of the Cognito User Pool Client
+
   CognitoDomain:
     Value: !Sub https://${CognitoUserPoolDomain}.auth.${AWS::Region}.amazoncognito.com
     Description: Cognito Domain URL
+
+  CognitoUserPoolArn:
+    Value: !GetAtt CognitoUserPool.Arn
+    Description: ARN of the Cognito User Pool
+    Export:
+      Name: CognitoUserPoolArn

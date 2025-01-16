@@ -24,6 +24,7 @@ watch = true
 
 [default.local_start_api.parameters]
 warm_containers = "EAGER"
+port = 3030
 
 [default.local_start_lambda.parameters]
 warm_containers = "EAGER"

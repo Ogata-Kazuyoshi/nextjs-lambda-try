@@ -1,6 +1,6 @@
 sam-local:
 	sam build
-	sam local start-api
+	sam local start-api --port 3030
 
 sam-deploy:
 	sam build
