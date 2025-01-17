@@ -31,7 +31,7 @@ const ConfirmSession = () => {
       axios
         .get(
           // 'https://dmmr4cq2aa.execute-api.ap-northeast-1.amazonaws.com/dev/api/hello',
-          'https://2msdy2z1l4.execute-api.ap-northeast-1.amazonaws.com/dev/hello',
+          'https://gsylcw6nrd.execute-api.ap-northeast-1.amazonaws.com/dev/hello',
           {
             headers: {
               // @ts-ignore

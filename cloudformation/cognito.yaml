@@ -41,6 +41,7 @@ Resources:
         - Name: email
           AttributeDataType: String
           Mutable: true
+          Required: true
       UserAttributeUpdateSettings:
         AttributesRequireVerificationBeforeUpdate:
           - email
@@ -51,8 +52,22 @@ Resources:
       Domain: !Ref CognitoCustomDomainPrefix
       UserPoolId: !Ref CognitoUserPool
 
+  CognitoUserPoolIdentityProviderGoogle:
+    Type: AWS::Cognito::UserPoolIdentityProvider
+    Properties:
+      ProviderName: Google
+      UserPoolId: !Ref CognitoUserPool
+      ProviderType: Google
+      ProviderDetails:
+        client_id: !Ref GoogleClientId
+        client_secret: !Ref GoogleClientSecret
+        authorize_scopes: 'openid email'
+      AttributeMapping:
+        email: email
+
   CognitoUserPoolClient:
     Type: AWS::Cognito::UserPoolClient
+    DependsOn: CognitoUserPoolIdentityProviderGoogle
     Properties:
       ClientName: cognito-auth
       UserPoolId: !Ref CognitoUserPool
@@ -70,19 +85,6 @@ Resources:
         - COGNITO
         - Google
       AllowedOAuthFlowsUserPoolClient: true
-
-  CognitoUserPoolIdentityProviderGoogle:
-    Type: AWS::Cognito::UserPoolIdentityProvider
-    Properties:
-      ProviderName: Google
-      UserPoolId: !Ref CognitoUserPool
-      ProviderType: Google
-      ProviderDetails:
-        client_id: !Ref GoogleClientId
-        client_secret: !Ref GoogleClientSecret
-        authorize_scopes: 'openid email'
-      AttributeMapping:
-        email: email
 
 Outputs:
   UserPoolId:
